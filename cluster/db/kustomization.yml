@@ -1,0 +1,11 @@
+namespace: desafio-db
+resources:
+  - namespace.yml
+  - deployment.yml
+  - pvc.yml
+  - service.yml
+
+secretGenerator:
+  - name: postgres-k8s-secret
+    envs:
+      - .env

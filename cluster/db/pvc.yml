@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: postgres-k8s-pvc
+
+spec:
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: storage-class
+  accessModes:
+    - ReadWriteOnce
