@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: api-k8s
+
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-k8s
+  template:
+    metadata:
+      labels:
+        app: api-k8s
+    spec:
+      containers:
+        - name: api-k8s
+          image: gusmartins499/challenge-k8s-api:v2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          startupProbe:
+            httpGet:
+              path: /health-startup
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /health-readiness
+              port: 3000
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+            periodSeconds: 10
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health-liveness
+              port: 3000
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+            periodSeconds: 10
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

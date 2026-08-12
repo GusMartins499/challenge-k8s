@@ -1,0 +1,5 @@
+namespace: desafio-api
+resources:
+  - namespace.yml
+  - deployment.yml
+  - service.yml
