@@ -40,8 +40,46 @@ As credenciais do banco ficam em `cluster/db/.env`, que não é versionado. Ante
 cp cluster/db/.env.example cluster/db/.env
 ```
 
-**5** — Criando os objetos
+**5** — Endpoints de health na API
+
+A pasta `api` foi criada para ter os declarativos relacionados à API. Criei três endpoints (`/health-startup`, `/health-readiness` e `/health-liveness`), um para cada probe do Deployment. A startup dá tempo da aplicação subir antes das outras duas começarem, a readiness controla se o pod recebe tráfego e a liveness verifica se o processo continua respondendo.
+
+**6** — Gerando a imagem da API
+
+O Dockerfile fica dentro de `api`, junto do código, e usa multi-stage para a imagem final levar apenas o `dist` e as dependências de produção.
+
+```bash
+docker build -t [seu-usuario-docker]/challenge-k8s-api:[tag] ./api
+```
+
+**7** — Publicando a imagem
+
+Os nós do Kind têm o próprio containerd e não enxergam as imagens do Docker da máquina. Publicando no Docker Hub, o Kubernetes baixa a imagem sozinho na hora de criar o pod. É necessário estar autenticado com `docker login`.
+
+```bash
+docker push [seu-usuario-docker]/challenge-k8s-api:[tag]
+```
+
+A tag precisa ser nova a cada alteração. Como o `imagePullPolicy` é `IfNotPresent`, o nó não busca de novo uma tag que já tem.
+
+**8** — Criando os objetos
 
 ```bash
 kubectl apply -k cluster/
+```
+
+**9** — Verificando
+
+```bash
+kubectl get pods,svc -n desafio-api
+```
+
+```bash
+kubectl get pods,svc -n desafio-db
+```
+
+Para testar os endpoints da API pelo host, é necessário fazer o port-forward, já que o Service é do tipo ClusterIP e só é acessível de dentro do cluster.
+
+```bash
+kubectl port-forward -n desafio-api svc/api-k8s-service 3000:80
 ```
