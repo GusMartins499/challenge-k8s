@@ -8,6 +8,7 @@ O desafio consiste em algumas tarefas, o link para o desafio está aqui: [Desafi
 - [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [Node.js](https://nodejs.org/)
+- [Fortio](https://github.com/fortio/fortio) — usado no teste de carga do HPA, roda como pod no cluster
 
 ## Passo a passo do que fiz
 
@@ -125,3 +126,39 @@ curl -s -X POST localhost:3000/dados
 ```bash
 curl -s localhost:3000/dados | jq
 ```
+
+## Testando o HPA
+
+O HPA depende do metrics-server, que é aplicado junto com os outros objetos. Para confirmar que ele está coletando métricas:
+
+```bash
+kubectl top nodes
+```
+
+Estado atual do autoscaler, com a utilização de CPU e o número de réplicas:
+
+```bash
+kubectl get hpa -n desafio-api
+```
+
+Para acompanhar a escalada ao vivo, em outro terminal:
+
+```bash
+kubectl get hpa -n desafio-api -w
+```
+
+O teste de carga roda como um pod dentro do cluster, batendo no Service. O `--rm` remove o pod ao final.
+
+```bash
+kubectl run -it fortio -n desafio-api --rm --image=fortio/fortio -- load -qps 6000 -t 120s -c 50 "http://api-k8s-service/status"
+```
+
+A carga precisa vir de dentro do cluster. Pelo port-forward não funcionaria, porque ele mantém o túnel em um único pod e o HPA usa a média de CPU entre todos.
+
+Depois do teste, o histórico da escalada fica nos eventos:
+
+```bash
+kubectl describe hpa api-k8s-hpa -n desafio-api
+```
+
+A subida acontece em segundos, mas a descida leva cerca de 5 minutos por causa da janela de estabilização, que evita que os pods sejam removidos por uma queda momentânea de tráfego.
