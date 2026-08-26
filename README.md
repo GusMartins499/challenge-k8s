@@ -32,12 +32,24 @@ docker run -d --name postgresql-k8s \
 kind create cluster --config cluster/kind-config.yml
 ```
 
-**4** — Criando o arquivo `.env`
+**4** — Criando os arquivos `.env`
 
-As credenciais do banco ficam em `cluster/db/.env`, que não é versionado. Antes de criar os objetos é necessário copiar o `.env.example` e preencher os valores, pois o Kustomize usa esse arquivo para gerar o Secret.
+As credenciais ficam em arquivos `.env` que não são versionados. O Kustomize lê esses arquivos para gerar os Secrets, então eles precisam existir antes de criar os objetos.
 
 ```bash
 cp cluster/db/.env.example cluster/db/.env
+```
+
+```bash
+cp cluster/api/.env.example cluster/api/.env
+```
+
+Os valores de `POSTGRES_USER` e `POSTGRES_PASSWORD` precisam ser iguais nos dois arquivos, senão a API não consegue autenticar no banco.
+
+Para rodar a API fora do cluster também é necessário o `.env` dela, apontando para o postgres do docker do passo 2.
+
+```bash
+cp api/.env.example api/.env
 ```
 
 **5** — Endpoints de health na API
@@ -64,9 +76,13 @@ A tag precisa ser nova a cada alteração. Como o `imagePullPolicy` é `IfNotPre
 
 **8** — Criando os objetos
 
+Antes de aplicar, o campo `image` em `cluster/api/deployment.yml` precisa apontar para a imagem publicada no passo 7.
+
 ```bash
 kubectl apply -k cluster/
 ```
+
+A tabela do banco é criada sozinha: a API roda as migrations do Drizzle na inicialização, antes de começar a atender.
 
 **9** — Verificando
 
@@ -82,4 +98,30 @@ Para testar os endpoints da API pelo host, é necessário fazer o port-forward, 
 
 ```bash
 kubectl port-forward -n desafio-api svc/api-k8s-service 3000:80
+```
+
+## Endpoints
+
+| Método | Rota | O que faz |
+| --- | --- | --- |
+| GET | `/` | Retorna `Hello World!` |
+| GET | `/health-startup` | Usado pela `startupProbe` |
+| GET | `/health-readiness` | Usado pela `readinessProbe` |
+| GET | `/health-liveness` | Usado pela `livenessProbe` |
+| GET | `/status` | Verifica a conexão com o banco e retorna `Conexão OK` |
+| POST | `/dados` | Insere um registro com nome aleatório, sem precisar de body |
+| GET | `/dados` | Lista os registros da tabela |
+
+Com o port-forward ativo:
+
+```bash
+curl -s localhost:3000/status
+```
+
+```bash
+curl -s -X POST localhost:3000/dados
+```
+
+```bash
+curl -s localhost:3000/dados | jq
 ```
