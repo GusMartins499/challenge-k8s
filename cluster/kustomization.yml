@@ -1,4 +1,5 @@
 resources:
+  - metrics-server/
   - storageclass.yml
   - pv.yml
   - db/
