@@ -3,3 +3,16 @@ resources:
   - namespace.yml
   - deployment.yml
   - service.yml
+
+configMapGenerator:
+  - name: api-k8s-config
+    literals:
+      - POSTGRES_HOST=postgres-k8s-service.desafio-db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=desafiok8s
+      - PORT=3000
+
+secretGenerator:
+  - name: api-k8s-secret
+    envs:
+      - .env

@@ -21,8 +21,13 @@ spec:
     spec:
       containers:
         - name: api-k8s
-          image: gusmartins499/challenge-k8s-api:v2
+          image: gusmartins499/challenge-k8s-api:v3
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: api-k8s-config
+            - secretRef:
+                name: api-k8s-secret
           ports:
             - containerPort: 3000
           startupProbe:
