@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
+import { DataRecord } from './db/schema';
 
 @Controller()
 export class AppController {
@@ -23,5 +24,20 @@ export class AppController {
   @Get('/health-liveness')
   getHealthLiveness(): string {
     return this.appService.getHealthLiveness();
+  }
+
+  @Get('/status')
+  async getStatus(): Promise<string> {
+    return await this.appService.getStatus();
+  }
+
+  @Get('/dados')
+  async listData(): Promise<DataRecord[]> {
+    return await this.appService.listData();
+  }
+
+  @Post('/dados')
+  async createData(): Promise<DataRecord> {
+    return await this.appService.createData();
   }
 }
