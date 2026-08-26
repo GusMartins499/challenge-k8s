@@ -31,6 +31,7 @@ WORKDIR /app
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/drizzle ./drizzle
 COPY package.json ./package.json
 
 USER node
