@@ -3,6 +3,7 @@ resources:
   - namespace.yml
   - deployment.yml
   - service.yml
+  - hpa.yml
 
 configMapGenerator:
   - name: api-k8s-config
